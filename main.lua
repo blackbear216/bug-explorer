@@ -1,72 +1,39 @@
+-- maybe make collision more efficient than aabb
+-- make it so i can collide with walls and distinguish them from floors
+
 require "levels"
+require "player"
 
 TILE_SIZE = 16
 WIDTH = love.graphics.getWidth()
 HEIGHT = love.graphics.getHeight()
 SCALE_FACTOR = 2.5
+GRAVITY = 250
 
 VIRTUAL_WIDTH = WIDTH / SCALE_FACTOR
 VIRTUAL_HEIGHT = HEIGHT / SCALE_FACTOR
 
-player = {}
-
 function love.load()
-    player.width = TILE_SIZE
-    player.height = TILE_SIZE
-    player.x = WIDTH / 2
-    player.y = HEIGHT / 2
-    player.x_vel = 100
-    player.y_vel = 0
-    player.grounded = true
+    player.load()
 
-    gravity = 250
-    ground = 400
     current_level = meadow
     current_sublevel = meadow.x0y0
     sublevel_tiles = load_sublevel(meadow.x0y0)
 end
 
 function love.update(dt)
-    player.move(dt)
     apply_gravity(dt)
-    player.check_collision_tiles()
+    player.update(dt)
 end
 
 function love.draw()
-    --love.graphics.scale(SCALE_FACTOR)
-    love.graphics.rectangle("fill", player.x, player.y, player.width, player.height)
+    love.graphics.scale(SCALE_FACTOR)
+    player.draw()
     for i, tile in ipairs(sublevel_tiles) do
         love.graphics.rectangle("line", tile.x, tile.y, tile.width, tile.height)
     end
 
     love.graphics.rectangle("line", 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
-end
-
-function player.move(dt)
-    if love.keyboard.isDown('a', 'left') then
-        player.x = player.x - player.x_vel * dt
-    end
-    if love.keyboard.isDown('d', 'right') then
-        player.x = player.x + player.x_vel * dt
-    end
-    if love.keyboard.isDown('w', 'up', 'space') then
-        player.jump()
-    end
-    player.y = player.y - player.y_vel * dt
-end
-
-function player.jump()
-    player.grounded = false
-    player.y_vel = 100
-end
-
-function player.check_collision_tiles()
-    for i,tile in ipairs(sublevel_tiles) do
-        if check_collision(player, tile) then
-            handle_collision(player, tile)
-            break
-        end
-    end
 end
 
 function handle_collision(a, b)
@@ -76,7 +43,7 @@ end
 
 function apply_gravity(dt)
     if not player.grounded then
-        player.y_vel = player.y_vel - gravity * dt
+        player.y_vel = player.y_vel + GRAVITY * dt
     end
 end
 
@@ -113,4 +80,14 @@ function load_sublevel(sublevel)
     end
 
     return sublevel_tiles
+end
+
+function copy_table(old_table)
+    local new_table = {}
+
+    for i,v in ipairs(old_table) do
+        table.insert(new_table, v)
+    end
+
+    return new_table
 end
